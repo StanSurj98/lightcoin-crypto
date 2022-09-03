@@ -2,10 +2,24 @@
 class Account {
   constructor(username) {
     this.username = username;
-    // let's start account at $0
-    this.balance = 0;
     // 7. let's add a feature to keep track of transactions
-    this.transactionHistory = [];
+    this.transactions = [];
+  }
+
+  get balance() {
+    let totalBalance = 0;
+    // sum up value of every transaction
+    // first, loop thru array
+    this.transactions.forEach((transaction) => {
+      // take each object in array, in our case transaction
+      totalBalance += transaction.value;
+      // running total the VALUE (cuz it can be negative/positive from the withdraw/deposit)
+    });
+    return totalBalance;
+  }
+
+  addTransaction(transaction) {
+    this.transactions.push(transaction)
   }
 
 }
@@ -13,17 +27,24 @@ class Account {
 // 4. DRY up code with a new TRANSACTION class
 class Transaction {
   // pass the account that this deposit is for
-  constructor(id, amount, account) {
+  constructor(amount, account) {
     this.amount = amount;
     this.account = account;
-    this.id = id;
   }
 
   // 6. move the commit() here
   commit() {
+    // Edge case 1: Transaction validity -> if totalBalance is 0, no more withdrawal
+    if (this.value < 0 && this.account.balance === 0) {
+      console.log(`Insufficient funds. Withdrawal request for $${this.amount} denied.`);
+      return;
+    }
+
+    // 8. Keep track of time of transaction
+    this.time = new Date();
+    this.account.addTransaction(this); // adds this entire object of transaction, to the array
     // now we just add the value, it's already decided if (+ / -)
-    this.account.balance += this.value;
-    this.account.transactionHistory.push(this.id);
+    console.log(`Deposit confirmed. Your new balance is $${this.account.balance}`);
   }
 }
 
@@ -51,11 +72,15 @@ class Withdrawal extends Transaction{
 // We use the code below to "drive" the application logic above and make sure it's working as expected
 
 const myAccount = new Account(`snow-patrol`);
-console.log(`Starting balance: ${myAccount.balance}`);
+const t3 = new Withdrawal(100.00, myAccount);
+t3.commit();
 
 const t1 = new Deposit(120.00, myAccount);
+const t2 = new Deposit(80.00, myAccount);
 t1.commit();
-const t2 = new Withdrawal(50.00, myAccount);
-t2.commit();
+// console.log(myAccount.balance);
 
-console.log(`Ending balance: ${myAccount.balance}`);
+t2.commit();
+// console.log(myAccount.balance);
+
+console.log(myAccount .transactions);
